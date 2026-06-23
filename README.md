@@ -9,7 +9,7 @@ Reference guide for the [SyncGTM MCP server](https://docs.syncgtm.com/mcp_server
 ## Prerequisites
 
 - **SyncGTM account** — logged in at [syncgtm.com](https://syncgtm.com)
-- **Credits** in your SyncGTM account
+- **Credits** in your SyncGTM account — [buy credits here](https://app.syncgtm.com/settings/credits/buy)
 
 ---
 
