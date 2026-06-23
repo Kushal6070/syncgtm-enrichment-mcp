@@ -1,47 +1,20 @@
-# syncgtm-enrichment-mcp
+# SyncGTM MCP
 
-Reference guide for the [SyncGTM MCP server](https://docs.syncgtm.com/mcp_server/tools) — covers setup, all available tools, credit costs, and real outbound use cases.
+Reference guide for the [SyncGTM MCP server](https://docs.syncgtm.com/mcp_server/tools) — covers all available tools, credit costs, and real outbound use cases.
 
 ---
+
+> **Tip:** Install the [sync-mcp agent](./agents/sync.md) for better formatting and experience.
 
 ## Prerequisites
 
-- **Claude Code** (CLI or desktop app) or **Claude Desktop** with MCP support
-- **SyncGTM account** — [syncgtm.com](https://syncgtm.com)
-- **API key** — generate from the SyncGTM dashboard under Settings → API Keys
-- Credits loaded in your account (check with `check_credits`)
+- **SyncGTM account** — logged in at [syncgtm.com](https://syncgtm.com)
 
 ---
 
-## Installation
+## Getting Started
 
-### 1. Add MCP server to Claude
-
-```json
-{
-  "mcpServers": {
-    "syncgtm": {
-      "command": "npx",
-      "args": ["-y", "@syncgtm/mcp"],
-      "env": {
-        "SYNCGTM_API_KEY": "your_api_key_here"
-      }
-    }
-  }
-}
-```
-
-Add to `~/.claude/claude_desktop_config.json` (Claude Desktop) or your project's `.mcp.json` (Claude Code).
-
-### 2. Install the `sync` agent skill
-
-Copy the `sync` agent skill file from the [`/agents`](./agents) folder into your Claude Code agents directory:
-
-```bash
-cp agents/sync.md ~/.claude/agents/sync.md
-```
-
-This skill is pre-configured to call SyncGTM MCP tools in the correct order, handle waterfall enrichment, check credits before expensive calls, and format outputs for outbound workflows. **Recommended** — run all tools through this agent for best results.
+For installation guides across different AI clients (Claude Code, Claude Desktop, Cursor, Windsurf, and more), see the [SyncGTM MCP documentation](https://docs.syncgtm.com/mcp_server).
 
 ---
 
