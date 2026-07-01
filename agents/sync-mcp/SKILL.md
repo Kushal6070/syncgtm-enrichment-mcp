@@ -3,7 +3,7 @@ name: sync-mcp
 description: "Use when asked to enrich contacts (emails, phones, mobile), scrape LinkedIn posts/commenters/engagers, look up LinkedIn from email, enrich companies, check job changes, or use any SyncGTM MCP tool. Use when the user says 'enrich emails', 'find phone numbers', 'scrape LinkedIn posts', 'find work email', 'enrich company', 'get LinkedIn posts', 'check job change', 'find mobile', or 'use SyncGTM'. Handles credit checks, column guards, LinkedIn URL requirements, and structured CSV output."
 metadata:
   version: 1.1.0
-allowed-tools: mcp__syncgtm__check_credits, mcp__syncgtm__enrich_person, mcp__syncgtm__find_work_email, mcp__syncgtm__find_personal_email, mcp__syncgtm__find_work_phone, mcp__syncgtm__find_mobile_number, mcp__syncgtm__verify_email, mcp__syncgtm__validate_whatsapp, mcp__syncgtm__find_linkedin_from_work_email, mcp__syncgtm__find_linkedin_from_personal_email, mcp__syncgtm__linkedin_profile_enrich, mcp__syncgtm__linkedin_profile_posts, mcp__syncgtm__enrich_organization, mcp__syncgtm__find_company_techstack, mcp__syncgtm__find_company_website_traffic, mcp__syncgtm__find_people_within_company, mcp__syncgtm__company_job_listings, mcp__syncgtm__search_job_listings, mcp__syncgtm__linkedin_page_jobs, mcp__syncgtm__linkedin_employee_finder, mcp__syncgtm__enrich_linkedin_page, mcp__syncgtm__premium_linkedin_page_insights, mcp__syncgtm__linkedin_page_posts, mcp__syncgtm__job_openings_growth_rate, mcp__syncgtm__head_count_growth_rate, mcp__syncgtm__check_job_change, mcp__syncgtm__check_promotions, Read, Edit, Write, Bash(python:*), Bash(python3:*)
+allowed-tools: mcp__syncgtm__check_credits, mcp__syncgtm__enrich_person, mcp__syncgtm__find_work_email, mcp__syncgtm__find_personal_email, mcp__syncgtm__find_work_phone, mcp__syncgtm__find_mobile_number, mcp__syncgtm__verify_email, mcp__syncgtm__validate_whatsapp, mcp__syncgtm__find_linkedin_from_work_email, mcp__syncgtm__find_linkedin_from_personal_email, mcp__syncgtm__linkedin_profile_enrich, mcp__syncgtm__linkedin_profile_posts, mcp__syncgtm__enrich_organization, mcp__syncgtm__find_company_techstack, mcp__syncgtm__find_company_website_traffic, mcp__syncgtm__find_people_within_company, mcp__syncgtm__company_job_listings, mcp__syncgtm__search_job_listings, mcp__syncgtm__linkedin_page_jobs, mcp__syncgtm__linkedin_employee_finder, mcp__syncgtm__search_company_by_techstack, mcp__syncgtm__enrich_linkedin_page, mcp__syncgtm__premium_linkedin_page_insights, mcp__syncgtm__linkedin_page_posts, mcp__syncgtm__job_openings_growth_rate, mcp__syncgtm__head_count_growth_rate, mcp__syncgtm__check_job_change, mcp__syncgtm__check_promotions, Read, Edit, Write, Bash(python:*), Bash(python3:*)
 ---
 
 # sync-mcp — SyncGTM MCP Enrichment Skill
@@ -56,6 +56,7 @@ Different tools require different identifiers. Check what's available before cal
 | `find_linkedin_from_work_email` | `email` (work) | — |
 | `find_linkedin_from_personal_email` | `email` (personal) | — |
 | `enrich_organization`, `find_company_techstack`, `find_company_website_traffic` | `domain` | — |
+| `search_company_by_techstack` | technology name(s) (no domain needed) | — |
 | `find_people_within_company`, `company_job_listings` | `domain` or company name | — |
 | `search_job_listings` | job title / keywords (no domain needed) | — |
 | `linkedin_page_jobs`, `linkedin_employee_finder` | LinkedIn company URL or name | — |
@@ -112,7 +113,8 @@ attempt 1 → fail → wait 10s → retry 1 → fail → wait 10s → retry 2
 | "get post commenters", "who commented", "commenters" | LinkedIn Post Commenters/Engagers |
 | "get post engagers", "who liked", "engagers" | LinkedIn Post Commenters/Engagers |
 | "enrich company", "company data" | Company Enrichment |
-| "find tech stack", "techstack" | Company Enrichment → Techstack |
+| "find tech stack", "techstack", "what tech does X use" — **has domain** | Company Enrichment → `find_company_techstack` (STRICTLY) |
+| "build company list by tech", "find companies using X tech", "outbound list by technology" | Company Enrichment → `search_company_by_techstack` (STRICTLY) |
 | "website traffic", "company traffic" | Company Enrichment → Traffic |
 | "find people at company", "employees", "people in company" | Company Enrichment → People |
 | "find decision makers", "decision makers", "who to contact" — **from LinkedIn** | Find Decision Makers → `linkedin_employee_finder` |
@@ -329,9 +331,38 @@ Column guard: skip rows where these columns are already filled.
 
 ### Find Company Techstack — 1 credit/row
 
+> **STRICT RULE:** If the user has existing domains and wants to check what tech those companies use, use THIS tool ONLY — never `search_company_by_techstack`.
+
 **Tool:** `mcp__syncgtm__find_company_techstack`  
 **Requires:** `domain`  
 **Output column:** `Tech Stack` (comma-separated list of technologies)
+
+---
+
+### Build Outbound List by Technology — 2 credits/result
+
+> **STRICT RULE:** If the user wants to find companies that use a specific technology (to build a prospecting list), use THIS tool ONLY — never `find_company_techstack`.
+
+**Tool:** `mcp__syncgtm__search_company_by_techstack`  
+**Use case:** Technographic prospecting — find companies running a specific stack (e.g. "find companies using Salesforce", "find companies on HubSpot").  
+**Requires:** technology name(s)  
+**Optional:** `industry`, `company_size`, `location`, `max_results`  
+**Cost:** 2 credits/result — always show estimate and confirm if > 25 results.
+
+**Output columns** (one row per company):
+
+| Column | Content |
+|---|---|
+| `Company Name` | Company name |
+| `Domain` | Company website |
+| `Industry` | Company industry |
+| `Company Size` | Employee range |
+| `Technologies` | Full tech stack returned |
+| `HQ Country` | Headquarters country |
+
+After running, offer: "Want me to find decision makers at these companies? I can filter by your ICP title."
+
+---
 
 ### Company Website Traffic — 1 credit/row
 
@@ -699,7 +730,8 @@ If `total cost > 50 credits`, ask for explicit confirmation before proceeding.
 | `linkedin_profile_enrich` | 1cr | profile_url | Full LinkedIn profile |
 | `linkedin_profile_posts` | 1cr | profile_url | Person's recent posts |
 | `enrich_organization` | 2cr | domain | Company profile |
-| `find_company_techstack` | 1cr | domain | Tech stack |
+| `find_company_techstack` | 1cr | domain | Check tech stack of existing domains (STRICT) |
+| `search_company_by_techstack` | 2cr/result | technology name | Build outbound list by technology (STRICT) |
 | `find_company_website_traffic` | 1cr | domain | Traffic data |
 | `find_people_within_company` | 0.5cr/result | domain | Decision makers/employees when company has domain |
 | `linkedin_employee_finder` | 0.5cr/result | LinkedIn company URL or name | Decision makers/employees from LinkedIn |
